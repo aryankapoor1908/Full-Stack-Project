@@ -3,7 +3,7 @@ import { ThumbsUp, ExternalLink, Star, Truck, ImageOff } from "lucide-react";
 
 const formatINR = (n) => n ? "₹" + Number(n).toLocaleString("en-IN") : null;
 
-/* ── Inline placeholder, no network request, no failed calls ── */
+
 function ImagePlaceholder() {
   return (
     <div className="w-full h-44 bg-gradient-to-br from-slate-100 to-slate-200 flex flex-col items-center justify-center text-slate-400 gap-1.5">

@@ -1,20 +1,11 @@
-// ─────────────────────────────────────────────────────────
-//  OpenWebNinja - Real-Time Product Search API
-//  Used ONLY when the user searches a specific product.
-//  Homepage / categories use fast built-in fallback data.
-//
-//  👇 PASTE YOUR API KEY HERE
-const API_KEY = "ak_u61zkblc3xgzrh9tor8opekpflwqj23148w33yw9ws4nutr";
-// ─────────────────────────────────────────────────────────
+
+//  api 
+const API_KEY = "ak_2znvnirixup6ds1fy2to9ywsa3u5yeco8sx0tr5w0aqeljm";
 
 const BASE_URL   = "https://api.openwebninja.com/realtime-product-search/v2/search";
-const USD_TO_INR = 84;
+const USD_TO_INR = 93;
 
-/* ──────────────────────────────────────────────────────────
-   Main entry point used by DealsPage.
-   - "all" / "electronics" / "fashion" etc. → fallback data (fast, free)
-   - anything else (a real search term)     → real API call
-────────────────────────────────────────────────────────── */
+
 export async function searchProducts(query = "") {
   const q = query.toLowerCase().trim();
   const isCategoryOrHome = ["all", "electronics", "fashion", "home", "gaming", "sports", ""].includes(q);
@@ -23,7 +14,7 @@ export async function searchProducts(query = "") {
     return getFallbackProducts(q);
   }
 
-  // ── Real search — call the live API ──
+  // Real search 
   return searchLiveAPI(query);
 }
 
@@ -42,7 +33,7 @@ async function searchLiveAPI(query) {
 
     if (!res.ok) {
       console.error("API error:", res.status, res.statusText);
-      return getFallbackProducts(query); // graceful fallback on API failure
+      return getFallbackProducts(query); 
     }
 
     const json = await res.json();
@@ -56,7 +47,7 @@ async function searchLiveAPI(query) {
       [];
 
     if (!Array.isArray(raw) || raw.length === 0) {
-      // API succeeded but found nothing — try local fallback too, then give up
+      // API succeeded but found nothing 
       const local = getFallbackProducts(query);
       return local.length > 0 ? local : [];
     }
@@ -69,7 +60,7 @@ async function searchLiveAPI(query) {
   }
 }
 
-/* ── Convert a real API product into our app's shape ── */
+// Convert a real API 
 function normalizeApiProduct(p) {
   if (!p) return null;
 
@@ -110,10 +101,7 @@ function normalizeApiProduct(p) {
   };
 }
 
-/* ──────────────────────────────────────────────────────────
-   Fallback data — fast, offline, used for homepage + categories
-   and as a backup if the live API fails or returns nothing
-────────────────────────────────────────────────────────── */
+
 function getFallbackProducts(query = "") {
   const q = query.toLowerCase().trim();
 
@@ -165,7 +153,7 @@ const FALLBACK_PRODUCTS = [
   { id:"fa4", category:"fashion clothing",        title:"Allen Solly Men's Regular Fit Formal Shirt",            image:"https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=400&q=80", price:899,    original:1999,   off:55, store:"Flipkart",  rating:4.1, reviews:4320,  url:"https://www.flipkart.com/search?q=allen+solly",  onSale:true,  shipping:"Free delivery", breadcrumb:["Fashion","Clothing"] },
   { id:"fa5", category:"fashion bags",            title:"Wildcraft Unisex Backpack 30L — Navy Blue",             image:"https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&q=80", price:1299,   original:2499,   off:48, store:"Amazon",    rating:4.2, reviews:7832,  url:"https://www.amazon.in/s?k=wildcraft+backpack",  onSale:true,  shipping:"Free delivery", breadcrumb:["Fashion","Bags"] },
 
-  { id:"h1",  category:"home furniture",          title:"Ergonomic Mesh Office Chair with Lumbar Support",       image:"https://images.unsplash.com/photo-1505843490578-d4799a0c2873?w=400&q=80", price:12499,  original:24999,  off:50, store:"Amazon",    rating:4.2, reviews:445,   url:"https://www.amazon.in/s?k=ergonomic+chair",     onSale:true,  shipping:"Free delivery", breadcrumb:["Home & Garden","Furniture"] },
+  { id:"h1",  category:"home furniture",          title:"Ergonomic Mesh Office Chair with Lumbar Support",       image:"https://unsplash.com/photos/an-office-chair-sitting-on-top-of-a-wooden-desk-TIOGOV5ZQzA", price:12499,  original:24999,  off:50, store:"Amazon",    rating:4.2, reviews:445,   url:"https://www.amazon.in/s?k=ergonomic+chair",     onSale:true,  shipping:"Free delivery", breadcrumb:["Home & Garden","Furniture"] },
   { id:"h2",  category:"home kitchen appliances", title:"Instant Pot Duo 7-in-1 Electric Pressure Cooker 6L",   image:"https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&q=80", price:8999,   original:12999,  off:31, store:"Amazon",    rating:4.6, reviews:7823,  url:"https://www.amazon.in/s?k=instant+pot",         onSale:true,  shipping:"Free delivery", breadcrumb:["Home & Garden","Kitchen"] },
   { id:"h3",  category:"home appliances",         title:"Dyson V15 Detect Cordless Vacuum Cleaner",             image:"https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80", price:42900,  original:52900,  off:19, store:"Croma",     rating:4.7, reviews:567,   url:"https://www.croma.com/search/?text=dyson",       onSale:false, shipping:"Free delivery", breadcrumb:["Home & Garden","Appliances"] },
   { id:"h4",  category:"home kitchen",            title:"Philips Air Fryer HD9200 4.1L — Black",                 image:"https://images.unsplash.com/photo-1585325701954-5a0a4832a4b7?w=400&q=80", price:7995,   original:11995,  off:33, store:"Flipkart",  rating:4.4, reviews:3421,  url:"https://www.flipkart.com/search?q=philips+air+fryer", onSale:true, shipping:"Free delivery", breadcrumb:["Home & Garden","Kitchen"] },

@@ -15,9 +15,9 @@ export const CONTRIBUTORS = [
 ];
 
 export const ALERTS = [
-  { id: "macbook", name: 'MacBook Pro M3 Max 14"', store: "Amazon", tracked: "Tracked for 45 days", price: 207999, change: "↓ ₹16,600 (8%)", changeColor: "text-emerald-600", image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=200&q=80" },
-  { id: "sony-headphones", name: "Sony WH-1000XM5", store: "Best Buy", tracked: "Tracked for 12 days", price: 28899, change: "↑ ₹1,660 (6%)", changeColor: "text-red-500", image: "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=200&q=80" },
-  { id: "sony-a7iv", name: "Sony Alpha a7 IV", store: "B&H Photo", tracked: "Tracked for 82 days", price: 190699, change: "No change", changeColor: "text-slate-400", image: "https://images.unsplash.com/photo-1606980707620-7a9b4f5b04a8?w=200&q=80" },
+  { id: "macbook", name: 'MacBook Pro M3 Max 14"', store: "", tracked: "Tracked for 45 days", price: 207999, change: "↓ ₹16,600 (8%)", changeColor: "text-emerald-600", image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=200&q=80" },
+  { id: "sony-headphones", name: "Sony WH-1000XM5", store: "", tracked: "Tracked for 12 days", price: 28899, change: "↑ ₹1,660 (6%)", changeColor: "text-red-500", image: "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=200&q=80" },
+  { id: "sony-a7iv", name: "Sony Alpha a7 IV", store: "", tracked: "Tracked for 82 days", price: 190699, change: "No change", changeColor: "text-slate-400", image: "https://images.unsplash.com/photo-1606980707620-7a9b4f5b04a8?w=200&q=80" },
 ];
 
 export const RECENT_DROPS = [

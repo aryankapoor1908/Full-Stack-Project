@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
-import { JWT_SECRET } from "../controller/authController.js"; // ← imports the SAME secret, no mismatch possible
+import { JWT_SECRET } from "../controller/authController.js";
 
 const protect = async (req, res, next) => {
   let token;
