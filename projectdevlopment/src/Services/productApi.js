@@ -14,7 +14,6 @@ export async function searchProducts(query = "") {
     return getFallbackProducts(q);
   }
 
-  // Real search 
   return searchLiveAPI(query);
 }
 
