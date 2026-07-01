@@ -1,105 +1,161 @@
 import React, { useState } from "react";
-import { ExternalLink, Truck, ShieldCheck, Star, ChevronDown, ChevronUp, BadgeCheck } from "lucide-react";
+import { ExternalLink, Truck, ShieldCheck, Star, ChevronDown, ChevronUp, BadgeCheck, Search } from "lucide-react";
 
 const formatINR = (n) => "₹" + Number(Math.round(n)).toLocaleString("en-IN");
 
-
-const ALL_STORES = [
-  { id: "amazon",   name: "Amazon",          logo: "", color: "bg-orange-50 border-orange-200",    badge: "Best Seller",   delivery: "Free delivery by tomorrow",  rating: 4.7, trusted: true,  searchUrl: (q) => `https://www.amazon.in/s?k=${encodeURIComponent(q)}` },
-  { id: "flipkart", name: "Flipkart",         logo: "", color: "bg-blue-50 border-blue-200",       badge: "SuperCoin",     delivery: "Free delivery in 2 days",    rating: 4.5, trusted: true,  searchUrl: (q) => `https://www.flipkart.com/search?q=${encodeURIComponent(q)}` },
-  { id: "croma",    name: "Croma",            logo: "", color: "bg-green-50 border-green-200",     badge: "EMI Available", delivery: "Store pickup available",     rating: 4.3, trusted: true,  searchUrl: (q) => `https://www.croma.com/searchB?q=${encodeURIComponent(q)}` },
+/* ── Other stores — only search links, no fake prices ── */
+const OTHER_STORES = [
+  { id: "amazon",   name: "Amazon",          logo: "🛒", searchUrl: (q) => `https://www.amazon.in/s?k=${encodeURIComponent(q)}` },
+  { id: "flipkart", name: "Flipkart",         logo: "🏪", searchUrl: (q) => `https://www.flipkart.com/search?q=${encodeURIComponent(q)}` },
+  { id: "croma",    name: "Croma",            logo: "🏬", searchUrl: (q) => `https://www.croma.com/searchB?q=${encodeURIComponent(q)}` },
+  { id: "tatacliq", name: "Tata CLiQ",        logo: "🏷️", searchUrl: (q) => `https://www.tatacliq.com/search/?text=${encodeURIComponent(q)}` },
+  { id: "reliance", name: "Reliance Digital", logo: "📱", searchUrl: (q) => `https://www.reliancedigital.in/search?q=${encodeURIComponent(q)}` },
+  { id: "myntra",   name: "Myntra",           logo: "👗", searchUrl: (q) => `https://www.myntra.com/${encodeURIComponent(q.replace(/\s+/g, "-"))}` },
+  { id: "meesho",   name: "Meesho",           logo: "🛍️", searchUrl: (q) => `https://www.meesho.com/search?q=${encodeURIComponent(q)}` },
+  { id: "snapdeal", name: "Snapdeal",         logo: "🔖", searchUrl: (q) => `https://www.snapdeal.com/search?keyword=${encodeURIComponent(q)}` },
 ];
 
-function seededRand(seed) {
-  let s = Math.abs(seed) || 1;
-  return () => { s = (s * 1664525 + 1013904223) & 0x7fffffff; return s / 0x7fffffff; };
-}
-function strToSeed(str) {
-  let h = 0;
-  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) & 0x7fffffff;
-  return h;
-}
-function getStorePrices(basePrice, productTitle) {
-  const rand = seededRand(strToSeed(productTitle));
-  return ALL_STORES.map((store) => {
-    const variation = -0.08 + rand() * 0.20;
-    const price = Math.round(basePrice * (1 + variation));
-    return { ...store, price, savings: price < basePrice ? basePrice - price : 0 };
-  }).sort((a, b) => a.price - b.price);
+/* ── Detect store name from URL ── */
+function detectStoreName(url = "") {
+  const u = url.toLowerCase();
+  if (u.includes("amazon"))          return "Amazon";
+  if (u.includes("flipkart"))        return "Flipkart";
+  if (u.includes("myntra"))          return "Myntra";
+  if (u.includes("croma"))           return "Croma";
+  if (u.includes("reliancedigital")) return "Reliance Digital";
+  if (u.includes("tatacliq"))        return "Tata CLiQ";
+  if (u.includes("meesho"))          return "Meesho";
+  if (u.includes("snapdeal"))        return "Snapdeal";
+  if (u.includes("apple"))           return "Apple";
+  if (u.includes("mi.com"))          return "Mi Store";
+  if (u.includes("wakefit"))         return "Wakefit";
+  return "Online Store";
 }
 
-export default function StoreComparison({ basePrice, productTitle, productUrl }) {
-  const [showAll, setShowAll] = useState(false);
+function storeEmoji(name = "") {
+  const n = name.toLowerCase();
+  if (n.includes("amazon"))          return "🛒";
+  if (n.includes("flipkart"))        return "🏪";
+  if (n.includes("myntra"))          return "👗";
+  if (n.includes("croma"))           return "🏬";
+  if (n.includes("reliance"))        return "📱";
+  if (n.includes("tata"))            return "🏷️";
+  if (n.includes("meesho"))          return "🛍️";
+  if (n.includes("snapdeal"))        return "🔖";
+  if (n.includes("apple"))           return "🍎";
+  if (n.includes("mi"))              return "📱";
+  if (n.includes("wakefit"))         return "🛏️";
+  return "🛒";
+}
+
+export default function StoreComparison({ basePrice, productTitle, productUrl, store }) {
+  const [showOthers, setShowOthers] = useState(false);
+
   if (!basePrice || basePrice <= 0) return null;
 
-  const stores  = getStorePrices(basePrice, productTitle);
-  const visible = showAll ? stores : stores.slice(0, 4);
-  const lowest  = stores[0];
+  // Determine the real store name
+  const realStoreName = store || detectStoreName(productUrl);
+  const realStoreUrl  = productUrl && productUrl !== "#" ? productUrl : null;
+
+  // Filter out the real store from "other stores" list
+  const otherStores = OTHER_STORES.filter(
+    (s) => !realStoreName.toLowerCase().includes(s.id) && !s.id.includes(realStoreName.toLowerCase())
+  );
 
   return (
     <div className="bg-white border border-slate-200 rounded-2xl p-6 mt-6">
+      {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h3 className="font-bold text-slate-900 text-lg">Best Sites to Buy</h3>
-          <p className="text-sm text-slate-500 mt-0.5">Comparing prices across {stores.length} trusted stores</p>
-        </div>
-        <div className="text-right">
-          <p className="text-xs text-slate-400">Lowest price</p>
-          <p className="text-xl font-bold text-emerald-600">{formatINR(lowest.price)}</p>
-          <p className="text-xs text-slate-500">at {lowest.name}</p>
+          <h3 className="font-bold text-slate-900 text-lg">Where to Buy</h3>
+          <p className="text-sm text-slate-500 mt-0.5">
+            Real listing from {realStoreName} · Search links for other stores
+          </p>
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
-        {visible.map((store, i) => {
-          //fall
-          const isOriginalStore = productUrl && productUrl !== "#" &&
-            productUrl.toLowerCase().includes(store.id);
-          const href = isOriginalStore ? productUrl : store.searchUrl(productTitle);
-
-          return (
-            <div key={store.id} className={`flex items-center justify-between border rounded-xl px-4 py-3 ${store.color} hover:shadow-sm transition-all`}>
-              <div className="flex items-center gap-3">
-                <span className="text-2xl w-8 text-center">{store.logo}</span>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-slate-800">{store.name}</span>
-                    {store.trusted && <BadgeCheck size={14} className="text-blue-500" />}
-                    {i === 0 && <span className="text-[10px] font-bold bg-emerald-500 text-white px-2 py-0.5 rounded-full">BEST PRICE</span>}
-                  </div>
-                  <div className="flex items-center gap-3 mt-0.5">
-                    <div className="flex items-center gap-1"><Star size={11} className="text-amber-400 fill-amber-400" /><span className="text-xs text-slate-500">{store.rating}</span></div>
-                    <div className="flex items-center gap-1 text-xs text-slate-500"><Truck size={11} />{store.delivery}</div>
-                  </div>
-                </div>
+      {/* ── Real store — actual product listing ── */}
+      <div className="border-2 border-emerald-200 bg-emerald-50 rounded-xl px-4 py-4 mb-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">{storeEmoji(realStoreName)}</span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-slate-800">{realStoreName}</span>
+                <BadgeCheck size={15} className="text-emerald-600" />
+                <span className="text-[10px] font-bold bg-emerald-500 text-white px-2 py-0.5 rounded-full">
+                  REAL LISTING
+                </span>
               </div>
-              <div className="flex items-center gap-4">
-                <div className="text-right">
-                  <p className="text-base font-bold text-slate-900">{formatINR(store.price)}</p>
-                  {store.savings > 0
-                    ? <p className="text-xs text-emerald-600 font-medium">Save {formatINR(store.savings)}</p>
-                    : <p className="text-xs text-slate-400">{store.badge}</p>
-                  }
-                </div>
-                <a
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
-                >
-                  Buy Now <ExternalLink size={11} />
-                </a>
+              <div className="flex items-center gap-1 mt-0.5">
+                <Star size={11} className="text-amber-400 fill-amber-400" />
+                <span className="text-xs text-slate-500">Verified product page</span>
+                <span className="text-slate-300 mx-1">•</span>
+                <Truck size={11} className="text-emerald-600" />
+                <span className="text-xs text-emerald-600">Free delivery</span>
               </div>
             </div>
-          );
-        })}
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <p className="text-xl font-bold text-slate-900">{formatINR(basePrice)}</p>
+              <p className="text-xs text-emerald-600 font-medium">Actual price</p>
+            </div>
+            {realStoreUrl ? (
+              <a
+                href={realStoreUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-5 py-2.5 rounded-lg transition-colors whitespace-nowrap"
+              >
+                Buy Now <ExternalLink size={12} />
+              </a>
+            ) : (
+              <span className="text-xs text-slate-400 italic">No link available</span>
+            )}
+          </div>
+        </div>
       </div>
 
-      
+      {/* ── Other stores — search links only, no fake prices ── */}
+      <button
+        onClick={() => setShowOthers((s) => !s)}
+        className="w-full flex items-center justify-between text-sm text-slate-600 font-medium py-2.5 px-4 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 transition-colors mb-3"
+      >
+        <span className="flex items-center gap-2">
+          <Search size={14} className="text-slate-400" />
+          Search this product on {otherStores.length} other stores
+        </span>
+        {showOthers ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+      </button>
 
+      {showOthers && (
+        <div className="grid grid-cols-2 gap-2">
+          {otherStores.map((s) => (
+            <a
+              key={s.id}
+              href={s.searchUrl(productTitle)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between border border-slate-200 rounded-xl px-3 py-2.5 hover:border-blue-300 hover:bg-blue-50 transition-all group"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-lg">{s.logo}</span>
+                <span className="text-sm font-medium text-slate-700">{s.name}</span>
+              </div>
+              <div className="flex items-center gap-1 text-blue-600 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                Search <ExternalLink size={10} />
+              </div>
+            </a>
+          ))}
+        </div>
+      )}
+
+      {/* Footer note */}
       <div className="flex items-center gap-2 mt-4 text-xs text-slate-400 justify-center">
         <ShieldCheck size={13} className="text-emerald-500" />
-        Prices are simulated estimates · Click "Buy Now" to search that store directly
+        Only {realStoreName} shows the verified real price · Other stores open search results
       </div>
     </div>
   );

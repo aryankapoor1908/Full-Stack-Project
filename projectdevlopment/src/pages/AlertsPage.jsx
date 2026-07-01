@@ -1,5 +1,43 @@
 import React, { useState } from "react";
-import { Bell, TrendingDown, Settings, Mail, MessageSquare, BellRing, Plus, Trash2, ExternalLink, X } from "lucide-react";
+import { Bell, TrendingDown, Settings, Mail, MessageSquare, BellRing, Plus, Trash2, ExternalLink, X, Link } from "lucide-react";
+
+/* ── Extract clean product name from any store URL ── */
+function extractProductName(url) {
+  try {
+    const u = new URL(url.startsWith("http") ? url : "https://" + url);
+    const host = u.hostname.toLowerCase();
+    if (host.includes("amazon")) {
+      const parts = u.pathname.split("/").filter(Boolean);
+      const dpIndex = parts.indexOf("dp");
+      if (dpIndex > 0) return decodeURIComponent(parts[dpIndex - 1]).replace(/-/g, " ");
+      return u.searchParams.get("k") || u.searchParams.get("field-keywords") || "";
+    }
+    if (host.includes("flipkart")) {
+      const parts = u.pathname.split("/").filter(Boolean);
+      return parts.length > 0 ? decodeURIComponent(parts[0]).replace(/-/g, " ") : "";
+    }
+    if (host.includes("myntra")) {
+      const parts = u.pathname.split("/").filter(Boolean);
+      return parts.length >= 2 ? decodeURIComponent(parts.slice(0,2).join(" ")).replace(/-/g, " ") : "";
+    }
+    const parts = u.pathname.split("/").filter((p) => p.length > 3 && !/^\d+$/.test(p));
+    if (parts.length > 0) return decodeURIComponent(parts[0]).replace(/[-_]/g, " ");
+    return "";
+  } catch { return ""; }
+}
+
+function detectStore(url) {
+  const u = url.toLowerCase();
+  if (u.includes("amazon"))          return "Amazon";
+  if (u.includes("flipkart"))        return "Flipkart";
+  if (u.includes("myntra"))          return "Myntra";
+  if (u.includes("croma"))           return "Croma";
+  if (u.includes("reliancedigital")) return "Reliance Digital";
+  if (u.includes("tatacliq"))        return "Tata CLiQ";
+  if (u.includes("meesho"))          return "Meesho";
+  if (u.includes("snapdeal"))        return "Snapdeal";
+  return "Online Store";
+}
 
 const formatINR = (n) => "₹" + Number(n).toLocaleString("en-IN");
 
@@ -66,24 +104,44 @@ function PreferenceToggle({ icon: Icon, label, checked, onChange }) {
 }
 
 function AddTrackingModal({ onClose, onAdd }) {
-  const [url, setUrl] = useState("");
-  const [targetPrice, setTargetPrice] = useState("");
-  const [error, setError] = useState("");
+  const [url,          setUrl]          = useState("");
+  const [productName,  setProductName]  = useState("");
+  const [currentPrice, setCurrentPrice] = useState("");
+  const [targetPrice,  setTargetPrice]  = useState("");
+  const [error,        setError]        = useState("");
+
+  const handleUrlChange = (e) => {
+    const v = e.target.value;
+    setUrl(v);
+    setError("");
+    if (v.trim()) {
+      const extracted = extractProductName(v.trim());
+      setProductName(extracted);
+    } else {
+      setProductName("");
+    }
+  };
 
   const handleAdd = () => {
     if (!url.trim()) return setError("Please paste a product URL.");
+    if (!currentPrice.trim() || isNaN(Number(currentPrice)) || Number(currentPrice) <= 0) {
+      return setError("Please enter the current price of the product.");
+    }
     if (!targetPrice.trim() || isNaN(Number(targetPrice)) || Number(targetPrice) <= 0) {
       return setError("Please enter a valid target price.");
     }
-
+    if (Number(targetPrice) >= Number(currentPrice)) {
+      return setError("Target price must be lower than the current price.");
+    }
+    const name = productName.trim() || "Tracked Product";
     onAdd({
       id: Date.now().toString(),
-      title: "Tracked Product — " + url.split("/").filter(Boolean).pop()?.slice(0, 40),
-      store: url.includes("amazon") ? "Amazon" : url.includes("flipkart") ? "Flipkart" : "Online Store",
+      title: name.charAt(0).toUpperCase() + name.slice(1),
+      store: detectStore(url),
       image: "",
       url,
-      targetPrice: Number(targetPrice),
-      currentPrice: Math.round(Number(targetPrice) * 1.15), // simulate current price
+      targetPrice:  Number(targetPrice),
+      currentPrice: Number(currentPrice),
     });
     onClose();
   };
@@ -100,8 +158,23 @@ function AddTrackingModal({ onClose, onAdd }) {
         <label className="text-xs font-semibold text-slate-500 mb-1 block">PRODUCT URL</label>
         <input
           value={url}
-          onChange={(e) => { setUrl(e.target.value); setError(""); }}
+          onChange={handleUrlChange}
           placeholder="https://amazon.in/product/..."
+          className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-blue-400 mb-2"
+        />
+        {productName && (
+          <div className="flex items-center gap-1.5 text-xs text-blue-700 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 mb-3">
+            <Link size={11} />
+            Detected: <strong>{productName}</strong> from <strong>{detectStore(url)}</strong>
+          </div>
+        )}
+
+        <label className="text-xs font-semibold text-slate-500 mb-1 block">CURRENT PRICE (₹)</label>
+        <input
+          value={currentPrice}
+          onChange={(e) => { setCurrentPrice(e.target.value); setError(""); }}
+          placeholder="e.g. 41400"
+          type="number"
           className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-blue-400 mb-3"
         />
 

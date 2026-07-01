@@ -158,6 +158,7 @@ export default function ProductDetailPage({ product, onBack, onAddAlert }) {
         basePrice={product.price}
         productTitle={product.title}
         productUrl={product.url}
+        store={product.store}
       />
 
       {/* ── Price history + Deal score ── */}
